@@ -2,10 +2,22 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import hashlib
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 import os
 import requests
 import calendar
+
+# ==========================================
+# MÚI GIỜ VIỆT NAM (UTC+7 / Asia/Ho_Chi_Minh)
+# ==========================================
+VN_TZ = timezone(timedelta(hours=7))
+
+def get_vn_now():
+    """Lấy ngày giờ hiện tại chuẩn múi giờ Việt Nam (UTC+7)"""
+    return datetime.now(VN_TZ)
+
+def get_vn_date_str():
+    return get_vn_now().strftime("%Y-%m-%d")
 
 # ==========================================
 # 1. CẤU HÌNH TRANG & GIAO DIỆN CHUẨN SOLAR 24H
@@ -309,7 +321,7 @@ def init_db():
                       (hpwd, fname, role, avt, title, uname))
     
     # Seed dữ liệu mẫu ban đầu (ở trạng thái 'Chờ duyệt')
-    today = date.today().strftime("%Y-%m-%d")
+    today_vn = get_vn_date_str()
     all_ktv_str = "Nguyễn Chí Thanh, Nguyễn Hoàng Nam, Võ Thành Thiện, Trần Công Vinh, Phạm Hồng Thái"
     
     c.execute("SELECT COUNT(*) FROM project_logs")
@@ -317,14 +329,14 @@ def init_db():
         c.execute("""
             INSERT INTO project_logs (date, project_name, value, registered_by, status, approved_by, approved_at, participating_ktvs)
             VALUES (?, 'Dự án SOLAR F8 Gò Công', 211400000, 'Nguyễn Chí Thanh (Trưởng Nhóm Thi Công)', 'Chờ duyệt', '-', '-', ?)
-        """, (today, all_ktv_str))
+        """, (today_vn, all_ktv_str))
     
     c.execute("SELECT COUNT(*) FROM maintenance_logs")
     if c.fetchone()[0] == 0:
         c.execute("""
             INSERT INTO maintenance_logs (date, client_name, location, registered_by, status, approved_by, approved_at, participating_ktvs)
             VALUES (?, 'Bảo trì Trạm sạc Cái Bè', 'Cái Bè', 'Nguyễn Hoàng Nam (Trưởng Nhóm Bảo Trì)', 'Chờ duyệt', '-', '-', ?)
-        """, (today, all_ktv_str))
+        """, (today_vn, all_ktv_str))
 
     # Seed dữ liệu điểm danh đầy đủ từ 01/07/2026 đến 21/07/2026 theo yêu cầu
     c.execute("SELECT COUNT(*) FROM attendance WHERE date LIKE '2026-07%'")
@@ -449,7 +461,7 @@ def calculate_individual_salaries(selected_month_filter):
         m_df = pd.read_sql_query("SELECT participating_ktvs FROM maintenance_logs WHERE status = 'Đã duyệt'", conn)
         fine_df = pd.read_sql_query("SELECT amount FROM fine_logs", conn)
     else:
-        m_pattern = date.today().strftime("%Y-%m")
+        m_pattern = get_vn_now().strftime("%Y-%m")
         p_df = pd.read_sql_query("SELECT value, participating_ktvs FROM project_logs WHERE status = 'Đã duyệt' AND date LIKE ?", conn, params=(f"{m_pattern}%",))
         m_df = pd.read_sql_query("SELECT participating_ktvs FROM maintenance_logs WHERE status = 'Đã duyệt' AND date LIKE ?", conn, params=(f"{m_pattern}%",))
         fine_df = pd.read_sql_query("SELECT amount FROM fine_logs WHERE date LIKE ?", conn, params=(f"{m_pattern}%",))
@@ -630,7 +642,7 @@ else:
         st.markdown("""
             <div class="main-header" style="margin-bottom: 15px; padding: 15px 25px;">
                 <h1 style="font-size: 1.9rem;">☀️ SOLAR 24H - PHÂN HỆ QUẢN TRỊ KỸ THUẬT</h1>
-                <p>Hệ Thống Chấm Công Chụp Ảnh Timemark & Tính Lương KPI Thực Tế</p>
+                <p>Hệ Thống Chấm Công Chụp Ảnh Timemark & Tính Lương KPI Thực Tế (Giờ VN - UTC+7)</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -703,13 +715,13 @@ else:
                             elif not ktv_participants:
                                 st.error("⚠️ Vui lòng chọn ít nhất 1 Kỹ thuật viên tham gia ca làm việc!")
                             else:
-                                now = datetime.now()
-                                date_str = now.strftime("%Y-%m-%d")
-                                time_str = now.strftime("%H:%M:%S")
+                                now_vn = get_vn_now()
+                                date_str = now_vn.strftime("%Y-%m-%d")
+                                time_str = now_vn.strftime("%H:%M:%S")
                                 
                                 # Lưu file ảnh thực tế vào thư mục uploads
                                 file_ext = os.path.splitext(photo_file.name)[1]
-                                saved_filename = f"{st.session_state.user}_{now.strftime('%Y%m%d_%H%M%S')}{file_ext}"
+                                saved_filename = f"{st.session_state.user}_{now_vn.strftime('%Y%m%d_%H%M%S')}{file_ext}"
                                 saved_path = os.path.join(UPLOAD_DIR, saved_filename)
                                 with open(saved_path, "wb") as f:
                                     f.write(photo_file.getbuffer())
@@ -726,13 +738,13 @@ else:
                                 conn.commit()
                                 conn.close()
                                 
-                                st.success(f"🎉 Gửi báo cáo chấm công thành công lúc {time_str} ngày {date_str} cho {len(ktv_participants)} KTV!")
+                                st.success(f"🎉 Gửi báo cáo chấm công thành công lúc {time_str} ngày {date_str} (Giờ VN) cho {len(ktv_participants)} KTV!")
                                 st.balloons()
                                 
                 with tab_leave_send:
                     with st.form("leave_form", clear_on_submit=True):
                         leave_target_ktv = st.selectbox("Chọn nhân sự xin nghỉ phép:", options=ALL_KTV_NAMES)
-                        leave_date_input = st.date_input("Ngày xin nghỉ phép:", value=date.today())
+                        leave_date_input = st.date_input("Ngày xin nghỉ phép:", value=get_vn_now().date())
                         leave_type_input = st.selectbox("Loại nghỉ phép:", ["Nghỉ phép năm (P)", "Nghỉ việc riêng có phép (P)", "Nghỉ bệnh / Khác (P)", "Nghỉ không phép (KP)"])
                         leave_reason_input = st.text_area("Lý do xin nghỉ phép (Ví dụ: Việc gia đình, đi khám bệnh...):")
                         
@@ -803,7 +815,7 @@ else:
                             elif not p_ktv_participants:
                                 st.error("Vui lòng chọn ít nhất 1 KTV trực tiếp tham gia thi công công trình!")
                             else:
-                                today_str = date.today().strftime("%Y-%m-%d")
+                                today_str = get_vn_date_str()
                                 p_ktvs_str = ", ".join(p_ktv_participants)
                                 conn = get_connection()
                                 c = conn.cursor()
@@ -837,7 +849,7 @@ else:
                             elif not m_ktv_participants:
                                 st.error("Vui lòng chọn ít nhất 1 KTV trực tiếp thực hiện ca bảo trì!")
                             else:
-                                today_str = date.today().strftime("%Y-%m-%d")
+                                today_str = get_vn_date_str()
                                 m_ktvs_str = ", ".join(m_ktv_participants)
                                 conn = get_connection()
                                 c = conn.cursor()
@@ -858,7 +870,7 @@ else:
             st.markdown("### 📊 Tiến Độ Tích Lũy Quỹ Lương KPI Thực Tế")
             
             # Chọn Tháng Quyết Toán
-            cur_month_str = date.today().strftime("%m/%Y")
+            cur_month_str = get_vn_now().strftime("%m/%Y")
             selected_month = st.selectbox("📅 Chọn kỳ quyết toán lương theo tháng:", [f"Tháng {cur_month_str}", "Tất cả các tháng tích lũy"])
             
             calc = calculate_individual_salaries(selected_month)
@@ -935,14 +947,14 @@ else:
                     with col_by:
                         if st.button("Duyệt Thưởng ✅", key=f"app_p_{row['id']}"):
                             c.execute("UPDATE project_logs SET status = 'Đã duyệt', approved_by = ?, approved_at = ? WHERE id = ?", 
-                                      (st.session_state.fullname, date.today().strftime("%Y-%m-%d"), row['id']))
+                                      (st.session_state.fullname, get_vn_date_str(), row['id']))
                             conn.commit()
                             st.success(f"🎉 Đã phê duyệt cộng +{fmt_vnd(row['value']*0.005)} VNĐ chia trực tiếp cho KTV tham gia!")
                             st.rerun()
                     with col_bn:
                         if st.button("Bác Bỏ ❌", key=f"rej_p_{row['id']}"):
                             c.execute("UPDATE project_logs SET status = 'Bác bỏ', approved_by = ?, approved_at = ? WHERE id = ?", 
-                                      (st.session_state.fullname, date.today().strftime("%Y-%m-%d"), row['id']))
+                                      (st.session_state.fullname, get_vn_date_str(), row['id']))
                             conn.commit()
                             st.warning("Đã bác bỏ đề xuất!")
                             st.rerun()
@@ -964,14 +976,14 @@ else:
                     with col_m_by:
                         if st.button("Phê Duyệt ✅", key=f"app_m_{row['id']}"):
                             c.execute("UPDATE maintenance_logs SET status = 'Đã duyệt', approved_by = ?, approved_at = ? WHERE id = ?", 
-                                      (st.session_state.fullname, date.today().strftime("%Y-%m-%d"), row['id']))
+                                      (st.session_state.fullname, get_vn_date_str(), row['id']))
                             conn.commit()
                             st.success("🎉 Đã phê duyệt cộng +100.000 VNĐ chia cho KTV thực hiện!")
                             st.rerun()
                     with col_m_bn:
                         if st.button("Bác Bỏ ❌", key=f"rej_m_{row['id']}"):
                             c.execute("UPDATE maintenance_logs SET status = 'Bác bỏ', approved_by = ?, approved_at = ? WHERE id = ?", 
-                                      (st.session_state.fullname, date.today().strftime("%Y-%m-%d"), row['id']))
+                                      (st.session_state.fullname, get_vn_date_str(), row['id']))
                             conn.commit()
                             st.warning("Đã bác bỏ ca bảo trì!")
                             st.rerun()
@@ -1024,7 +1036,7 @@ else:
             st.markdown("### 📊 Quỹ Lương Tích Lũy & Bảng Tính Thu Nhập Trọn Gói")
             
             # Chọn Kỳ Quyết Toán Theo Tháng
-            cur_month_str = date.today().strftime("%m/%Y")
+            cur_month_str = get_vn_now().strftime("%m/%Y")
             selected_month = st.selectbox("📅 Chọn kỳ quyết toán lương theo tháng:", [f"Tháng {cur_month_str}", "Tất cả các tháng tích lũy"])
             
             calc = calculate_individual_salaries(selected_month)
@@ -1085,7 +1097,7 @@ else:
         elif menu == "🕒 Nhật Ký Chấm Công KTV":
             st.markdown("### 🕒 Nhật Ký Chấm Công & Bảng Ma Trận Công Tháng")
             
-            now_dt = datetime.now()
+            now_dt = get_vn_now()
             days_in_month = calendar.monthrange(now_dt.year, now_dt.month)[1]
             
             tab_matrix, tab_detail, tab_leave_list = st.tabs(["📊 Bảng Ma Trận Công Excel Theo Tháng", "🖼️ Nhật Ký Chi Tiết & Ảnh Timemark", "🏖️ Lịch Sử Xin Nghỉ Phép (P)"])
@@ -1215,7 +1227,7 @@ else:
                         st.error("Vui lòng mô tả lý do vi phạm chi tiết!")
                     else:
                         amount = 500000 if "Thi công" in fine_sel else 100000
-                        today_str = date.today().strftime("%Y-%m-%d")
+                        today_str = get_vn_date_str()
                         
                         conn = get_connection()
                         c = conn.cursor()
