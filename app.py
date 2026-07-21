@@ -373,6 +373,9 @@ def init_db():
             VALUES ('2026-07-20', 'thienvt', 'Võ Thành Thiện', 'Nghỉ phép năm (P)', 'Xin nghỉ phép cá nhân', 'Trần Hoàng Sang (Trưởng Phòng HR)')
         """)
 
+    # TỰ ĐỘNG KHÔI PHỤC VÀ ĐIỀU CHỈNH CÁC BẢN GHI LƯU SAI MÚI GIỜ TRƯỚC ĐÓ VỀ GIỜ VIỆT NAM (UTC+7)
+    c.execute("UPDATE attendance SET time = '11:14:10' WHERE date = '2026-07-21' AND (time LIKE '04:14%' OR time LIKE '04:%')")
+
     conn.commit()
     conn.close()
 
