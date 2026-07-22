@@ -441,7 +441,6 @@ def init_db():
     c.execute("UPDATE attendance SET time = '11:14:10' WHERE date = '2026-07-21' AND (time LIKE '04:14%' OR time LIKE '04:%')")
 
     conn.commit()
-    conn.close()
 
 init_db()
 
@@ -464,7 +463,6 @@ def get_user_avatar(username):
     c = conn.cursor()
     c.execute("SELECT avatar FROM users WHERE username = ?", (username,))
     row = c.fetchone()
-    conn.close()
     if row and row[0] and os.path.exists(row[0]):
         return row[0]
     return "Logo Solar 24h.png" if os.path.exists("Logo Solar 24h.png") else None
@@ -544,7 +542,6 @@ def calculate_individual_salaries(selected_month_filter):
         m_df = pd.read_sql_query("SELECT participating_ktvs FROM maintenance_logs WHERE status = 'Đã duyệt' AND date LIKE ?", conn, params=(f"{m_pattern}%",))
         fine_df = pd.read_sql_query("SELECT amount FROM fine_logs WHERE date LIKE ?", conn, params=(f"{m_pattern}%",))
         
-    conn.close()
     
     total_p_val = p_df["value"].sum() if not p_df.empty else 0.0
     total_p_bonus = total_p_val * 0.005
@@ -800,7 +797,6 @@ if not st.session_state.logged_in:
         c.execute("SELECT fullname, role, avatar, title FROM users WHERE username = ? AND password_hash = ?", 
                   (username_input, hash_password(password_input)))
         row = c.fetchone()
-        conn.close()
         
         if row:
             st.session_state.logged_in = True
@@ -954,7 +950,6 @@ else:
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                                 """, (date_str, time_str, st.session_state.user, st.session_state.fullname, work_select, note_input, saved_filename, participating_str))
                                 conn.commit()
-                                conn.close()
                                 
                                 st.success(f"🎉 Gửi báo cáo chấm công thành công lúc {time_str} ngày {date_str} (Giờ VN) cho {len(ktv_participants)} KTV!")
                                 st.balloons()
@@ -980,7 +975,6 @@ else:
                                     VALUES (?, ?, ?, ?, ?, ?)
                                 """, (leave_date_input.strftime("%Y-%m-%d"), target_uname, leave_target_ktv, leave_type_input, leave_reason_input.strip(), st.session_state.fullname))
                                 conn.commit()
-                                conn.close()
                                 
                                 st.success(f"🏖️ Đã ghi nhận lịch nghỉ phép cho {leave_target_ktv} vào ngày {leave_date_input.strftime('%d/%m/%Y')} (Ký hiệu: P)!")
                                 send_zalo_webhook(f"[Solar 24h Web App] {st.session_state.title} {st.session_state.fullname} vừa đăng ký nghỉ phép cho KTV {leave_target_ktv} ngày {leave_date_input.strftime('%d/%m/%Y')}. Lý do: {leave_reason_input.strip()}.")
@@ -1042,7 +1036,6 @@ else:
                                     VALUES (?, ?, ?, ?, 'Chờ duyệt', '-', '-', ?)
                                 """, (today_str, p_name.strip(), p_val, f"{st.session_state.fullname} ({st.session_state.title})", p_ktvs_str))
                                 conn.commit()
-                                conn.close()
                                 
                                 st.success(f"🚀 Đã gửi đề xuất duyệt thưởng công trình {p_name.strip()} ({fmt_vnd(p_val)} VNĐ) cho {len(p_ktv_participants)} KTV tham gia trực tiếp!")
                                 send_zalo_webhook(f"[Solar 24h Web App] {st.session_state.title} {st.session_state.fullname} báo cáo hoàn thành lắp đặt {p_name.strip()} ({fmt_vnd(p_val)} đ) với {len(p_ktv_participants)} KTV tham gia. Chờ duyệt thưởng 0.5%.")
@@ -1076,7 +1069,6 @@ else:
                                     VALUES (?, ?, ?, ?, 'Chờ duyệt', '-', '-', ?)
                                 """, (today_str, m_client.strip(), m_loc.strip(), f"{st.session_state.fullname} ({st.session_state.title})", m_ktvs_str))
                                 conn.commit()
-                                conn.close()
                                 
                                 st.success(f"🚀 Đã gửi đề xuất duyệt ca sửa chữa {m_client.strip()} cho {len(m_ktv_participants)} KTV thực hiện!")
                                 send_zalo_webhook(f"[Solar 24h Web App] {st.session_state.title} {st.session_state.fullname} vừa nộp báo cáo hoàn thành ca bảo trì {m_client.strip()} ({m_loc.strip()}) cho {len(m_ktv_participants)} KTV. Chờ phê duyệt từ Anh Sang / Anh Việt.")
@@ -1252,7 +1244,6 @@ else:
                                     st.success("Đã hoàn tác ca bảo trì về trạng thái Chờ duyệt!")
                                     st.rerun()
                                     
-            conn.close()
 
         # ------------------------------------------
         # ADMIN - CHỨC NĂNG 2: BẢNG LƯƠNG TỔNG QUAN
@@ -1432,7 +1423,6 @@ else:
                 else:
                     st.dataframe(l_logs_df.drop(columns=["id"]), use_container_width=True)
                     
-            conn.close()
 
         # ------------------------------------------
         # ADMIN - CHỨC NĂNG 4: NHẬP PHẠT CHẾ TÀI
@@ -1462,7 +1452,6 @@ else:
                             VALUES (?, ?, ?, ?, ?)
                         """, (today_str, fine_sel, amount, reason_input.strip(), st.session_state.fullname))
                         conn.commit()
-                        conn.close()
                         
                         st.success(f"🚨 Đã cập nhật thành công hình phạt trừ {fmt_vnd(amount)} đ vào cơ sở dữ liệu.")
 

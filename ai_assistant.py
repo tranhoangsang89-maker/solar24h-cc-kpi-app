@@ -111,7 +111,6 @@ def get_pending_proposals():
             "registered_by": r[4],
             "participating_ktvs": r[5]
         })
-    conn.close()
     
     return json.dumps({
         "pending_projects": projects,
@@ -159,7 +158,6 @@ def approve_proposal(proposal_type: str = "", proposal_id: int = None, approver_
     except Exception as e:
         return f"Lỗi khi thực hiện phê duyệt: {str(e)}"
     finally:
-        conn.close()
 
 def reject_proposal(proposal_type: str = "", proposal_id: int = None, approver_fullname: str = ""):
     """
@@ -202,7 +200,6 @@ def reject_proposal(proposal_type: str = "", proposal_id: int = None, approver_f
     except Exception as e:
         return f"Lỗi khi thực hiện bác bỏ: {str(e)}"
     finally:
-        conn.close()
 
 # --- 2. NHÓM BÁO CÁO / CHẤM CÔNG ---
 
@@ -238,7 +235,6 @@ def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / 
     except Exception as e:
         return f"Lỗi khi lưu chấm công: {str(e)}"
     finally:
-        conn.close()
 
 def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm (P)", reason: str = "", logged_by_fullname: str = ""):
     """
@@ -292,7 +288,6 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
     except Exception as e:
         return f"Lỗi khi lưu nghỉ phép: {str(e)}"
     finally:
-        conn.close()
 
 # --- 3. NHÓM ĐĂNG KÝ SẢN LƯỢNG ---
 
@@ -334,7 +329,6 @@ def delete_attendance(ktv_fullname: str, date_str: str = ""):
     except Exception as e:
         return f"Lỗi xóa chấm công: {str(e)}"
     finally:
-        conn.close()
 
 def delete_leave(ktv_fullname: str, date_str: str = ""):
     """
@@ -360,7 +354,6 @@ def delete_leave(ktv_fullname: str, date_str: str = ""):
     except Exception as e:
         return f"Lỗi xóa nghỉ phép: {str(e)}"
     finally:
-        conn.close()
 
 def register_project(project_name: str = "", contract_value: float = 0.0, ktv_names: list = None, registered_by_fullname: str = ""):
     """
@@ -409,7 +402,6 @@ def register_project(project_name: str = "", contract_value: float = 0.0, ktv_na
     except Exception as e:
         return f"Lỗi khi đăng ký dự án: {str(e)}"
     finally:
-        conn.close()
 
 def register_maintenance(client_name: str = "", location: str = "", ktv_names: list = None, registered_by_fullname: str = ""):
     """
@@ -454,7 +446,6 @@ def register_maintenance(client_name: str = "", location: str = "", ktv_names: l
     except Exception as e:
         return f"Lỗi khi đăng ký ca bảo trì: {str(e)}"
     finally:
-        conn.close()
 
 # --- 4. NHÓM CHẾ TÀI PHẠT ---
 
@@ -485,7 +476,6 @@ def log_fine(fine_type: str = "", reason: str = "", logged_by_fullname: str = ""
     except Exception as e:
         return f"Lỗi khi lưu hình phạt: {str(e)}"
     finally:
-        conn.close()
 
 # --- 5. NHÓM TRA CỨU TỔNG QUAN ---
 
@@ -559,7 +549,6 @@ def query_leaves(month_filter: str = "Tất cả các tháng tích lũy"):
             c.execute("SELECT date, fullname, leave_type, reason, logged_by FROM leave_logs")
             
         rows = c.fetchall()
-        conn.close()
         
         if not rows:
             return f"Không tìm thấy dữ liệu nghỉ phép cho kỳ: {month_filter}"
