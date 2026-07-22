@@ -665,7 +665,8 @@ def render_ai_assistant_page():
                             if text_start != -1 and text_end != -1:
                                 user_text = f"🎤 *[Giọng nói: \"{trans_part[text_start+1:text_end]}\"]*"
                             else:
-                                user_text = f"🎤 *[Giọng nói: {trans_part.replace('[Bản dịch thoại:', '').strip(' \'\"][]')}]*"
+                                clean_trans = trans_part.replace('[Bản dịch thoại:', '').strip(" '\"][]")
+                                user_text = f"🎤 *[Giọng nói: {clean_trans}]*"
                         except Exception:
                             pass
                     
