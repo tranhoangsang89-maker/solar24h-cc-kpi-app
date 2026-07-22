@@ -235,6 +235,72 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
 
 # --- 3. NHÓM ĐĂNG KÝ SẢN LƯỢNG ---
 
+
+def delete_attendance(ktv_fullname: str, date_str: str = ""):
+    """
+    Xóa báo cáo chấm công (hủy chấm công) của một Kỹ thuật viên trong một ngày cụ thể.
+    
+    Parameters:
+        ktv_fullname: Tên đầy đủ của KTV cần xóa chấm công (ví dụ: 'Nguyễn Chí Thanh', 'Trần Công Vinh').
+        date_str: Ngày chấm công cần xóa (định dạng YYYY-MM-DD, mặc định là ngày hôm nay nếu để trống).
+    """
+    if not date_str:
+        date_str = get_vn_date_str()
+        
+    conn = get_connection()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT id, participating_ktvs, fullname FROM attendance WHERE date = ?", (date_str,))
+        records = c.fetchall()
+        deleted = False
+        for rec in records:
+            rec_id, p_ktvs, submitter = rec
+            p_list = [x.strip() for x in p_ktvs.split(',')] if p_ktvs else [submitter]
+            if ktv_fullname in p_list:
+                if len(p_list) <= 1:
+                    c.execute("DELETE FROM attendance WHERE id = ?", (rec_id,))
+                else:
+                    p_list.remove(ktv_fullname)
+                    new_p_str = ", ".join(p_list)
+                    c.execute("UPDATE attendance SET participating_ktvs = ? WHERE id = ?", (new_p_str, rec_id))
+                deleted = True
+        
+        conn.commit()
+        if deleted:
+            return f"Đã xóa chấm công thành công cho KTV: {ktv_fullname} vào ngày {date_str}."
+        else:
+            return f"Không tìm thấy bản ghi chấm công nào của KTV {ktv_fullname} vào ngày {date_str} để xóa."
+    except Exception as e:
+        return f"Lỗi xóa chấm công: {str(e)}"
+    finally:
+        conn.close()
+
+def delete_leave(ktv_fullname: str, date_str: str = ""):
+    """
+    Xóa báo cáo nghỉ phép (hủy đơn xin nghỉ) của một Kỹ thuật viên trong một ngày cụ thể.
+    
+    Parameters:
+        ktv_fullname: Tên đầy đủ của KTV cần xóa đơn nghỉ phép (ví dụ: 'Nguyễn Chí Thanh', 'Trần Công Vinh').
+        date_str: Ngày nghỉ phép cần xóa (định dạng YYYY-MM-DD, mặc định là ngày hôm nay nếu để trống).
+    """
+    if not date_str:
+        date_str = get_vn_date_str()
+        
+    conn = get_connection()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT COUNT(*) FROM leave_logs WHERE date = ? AND fullname = ?", (date_str, ktv_fullname))
+        if c.fetchone()[0] > 0:
+            c.execute("DELETE FROM leave_logs WHERE date = ? AND fullname = ?", (date_str, ktv_fullname))
+            conn.commit()
+            return f"Đã xóa đơn nghỉ phép thành công cho KTV: {ktv_fullname} vào ngày {date_str}."
+        else:
+            return f"Không tìm thấy đơn nghỉ phép nào của KTV {ktv_fullname} vào ngày {date_str} để xóa."
+    except Exception as e:
+        return f"Lỗi xóa nghỉ phép: {str(e)}"
+    finally:
+        conn.close()
+
 def register_project(project_name: str = "", contract_value: float = 0.0, ktv_names: list = None, registered_by_fullname: str = ""):
     """
     Đăng ký nghiệm thu công trình mới đã đóng điện để chờ duyệt thưởng 0.5%.
@@ -513,7 +579,9 @@ Danh sách 5 KTV cố định trong hệ thống để đối chiếu khi đăng
                     approve_proposal,
                     reject_proposal,
                     add_attendance,
+                    delete_attendance,
                     register_leave,
+                    delete_leave,
                     register_project,
                     register_maintenance,
                     log_fine,
