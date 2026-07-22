@@ -1302,13 +1302,13 @@ else:
                                 l_type = l_records.iloc[0]["leave_type"]
                                 leave_code = "KP" if "không phép" in l_type.lower() else "P"
                         
-                        if worked:
-                            row_data[col_header] = "✔️"
-                            total_days_worked += 1
-                        elif has_leave:
+                        if has_leave:
                             row_data[col_header] = leave_code
                             if leave_code == "P":
                                 total_leave_days += 1
+                        elif worked:
+                            row_data[col_header] = "✔️"
+                            total_days_worked += 1
                         else:
                             row_data[col_header] = "CN" if is_sunday else "—"
                             
