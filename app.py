@@ -7,6 +7,65 @@ import os
 import requests
 import calendar
 
+import psycopg2
+import toml
+import os
+
+class SupabaseConnectionWrapper:
+    def __init__(self, conn):
+        self.conn = conn
+    def cursor(self):
+        return SupabaseCursorWrapper(self.conn.cursor())
+    def commit(self):
+        self.conn.commit()
+    def close(self):
+        self.conn.close()
+    def rollback(self):
+        self.conn.rollback()
+
+class SupabaseCursorWrapper:
+    def __init__(self, cursor):
+        self.cursor = cursor
+    def execute(self, query, params=None):
+        query = query.replace('?', '%s')
+        if params is None:
+            self.cursor.execute(query)
+        else:
+            self.cursor.execute(query, params)
+    def fetchall(self):
+        return self.cursor.fetchall()
+    def fetchone(self):
+        return self.cursor.fetchone()
+    def fetchmany(self, size):
+        return self.cursor.fetchmany(size)
+    @property
+    def description(self):
+        return self.cursor.description
+    @property
+    def rowcount(self):
+        return self.cursor.rowcount
+    def close(self):
+        self.cursor.close()
+
+def get_connection():
+    try:
+        import streamlit as st
+        supabase_url = st.secrets.get('SUPABASE_DB_URL')
+    except:
+        try:
+            secrets = toml.load(r'd:\IDE CC KPI Solar 24h\.streamlit\secrets.toml')
+            supabase_url = secrets.get('SUPABASE_DB_URL')
+        except:
+            supabase_url = None
+            
+    if supabase_url:
+        return SupabaseConnectionWrapper(psycopg2.connect(supabase_url))
+    else:
+        import sqlite3
+        return get_connection()
+
+
+
 # ==========================================
 # MÚI GIỜ VIỆT NAM (UTC+7 / Asia/Ho_Chi_Minh)
 # ==========================================
@@ -172,7 +231,7 @@ st.markdown("""
 DB_FILE = "solar24h_local.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE, check_same_thread=False)
+    conn = get_connection()
     c = conn.cursor()
     
     # Bảng người dùng tài khoản
@@ -387,7 +446,7 @@ init_db()
 # 3. CÁC HÀM TIỆN ÍCH (HELPER FUNCTIONS)
 # ==========================================
 def get_connection():
-    return sqlite3.connect(DB_FILE, check_same_thread=False)
+    return get_connection()
 
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
