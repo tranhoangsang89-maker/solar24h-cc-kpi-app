@@ -551,12 +551,14 @@ HƯỚNG DẪN BẢO MẬT & PHÂN QUYỀN (RẤT QUAN TRỌNG):
 3. Luôn phản hồi bằng tiếng Việt thân thiện, lịch sự, chuyên nghiệp, xúc tích. Trình bày thông tin rõ ràng bằng Markdown.
 4. NẾU người dùng gửi tin nhắn thoại (dữ liệu âm thanh), bạn BẮT BUỘC phải nghe và dịch (chép lại) toàn bộ lời thoại tiếng Việt của họ, rồi ghi ngay ở dòng đầu tiên của câu trả lời theo cú pháp chính xác: `[Bản dịch thoại: "nội dung lời thoại của người dùng"]` (phải có dấu ngoặc kép bao quanh nội dung dịch và nằm trong ngoặc vuông). Sau đó mới thực hiện tác vụ và trả lời phần tiếp theo ở các dòng dưới.
 
-Danh sách 5 KTV cố định trong hệ thống để đối chiếu khi đăng ký:
-1. Nguyễn Chí Thanh (username: thanhnc) - Trưởng Nhóm Thi Công
-2. Nguyễn Hoàng Nam (username: namnh) - Trưởng Nhóm Bảo Trì
-3. Võ Thành Thiện (username: thienvt) - Kỹ Thuật Viên
-4. Trần Công Vinh (username: vinhtc) - Kỹ Thuật Viên
-5. Phạm Hồng Thái (username: thaiph) - Kỹ Thuật Viên
+Danh sách nhân sự trong hệ thống (kèm SĐT để tra cứu và đối chiếu):
+1. Hồ Minh Việt (username: viethm) - Giám Đốc | SĐT: 0909.363.579
+2. Trần Hoàng Sang (username: sangth) - Trưởng Phòng HR | SĐT: 0888.003.205
+3. Nguyễn Chí Thanh (username: thanhnc) - Trưởng Nhóm Thi Công | SĐT: 0971.847.084
+4. Nguyễn Hoàng Nam (username: namnh) - Trưởng Nhóm Bảo Trì | SĐT: 078.336.7989
+5. Võ Thành Thiện (username: thienvt) - Kỹ Thuật Viên | SĐT: 0328.400.801
+6. Trần Công Vinh (username: vinhtc) - Kỹ Thuật Viên | SĐT: 0898.044.598
+7. Phạm Hồng Thái (username: thaiph) - Kỹ Thuật Viên | SĐT: 0362.240.392
 """
 
     fallback_models = [

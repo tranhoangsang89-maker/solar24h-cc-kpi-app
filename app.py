@@ -195,6 +195,8 @@ def init_db():
         c.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
     if "title" not in cols:
         c.execute("ALTER TABLE users ADD COLUMN title TEXT")
+    if "phone" not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN phone TEXT")
     
     # Bảng chấm công hàng ngày
     c.execute("""
@@ -414,6 +416,8 @@ KTV_PROFILE_LIST = [
         "note": "Lái xe + thợ cả (Phụ cấp 1 triệu)",
         "allowance": 1000000,
         "allowance_desc": "1.000.000 đ (Lái xe + thợ cả)"
+    ,
+        "phone": "0971.847.084"
     },
     {
         "username": "namnh", 
@@ -423,6 +427,8 @@ KTV_PROFILE_LIST = [
         "note": "Hotline + thợ tinh (Phụ cấp 1 triệu)",
         "allowance": 1000000,
         "allowance_desc": "1.000.000 đ (Hotline + thợ tinh)"
+    ,
+        "phone": "078.336.7989"
     },
     {
         "username": "thienvt", 
@@ -432,6 +438,8 @@ KTV_PROFILE_LIST = [
         "note": "Kỹ thuật viên chính",
         "allowance": 0,
         "allowance_desc": "Không"
+    ,
+        "phone": "0328.400.801"
     },
     {
         "username": "vinhtc", 
@@ -441,6 +449,8 @@ KTV_PROFILE_LIST = [
         "note": "Kỹ thuật viên chính",
         "allowance": 0,
         "allowance_desc": "Không"
+    ,
+        "phone": "0898.044.598"
     },
     {
         "username": "thaiph", 
@@ -450,6 +460,8 @@ KTV_PROFILE_LIST = [
         "note": "Kỹ thuật viên chính",
         "allowance": 0,
         "allowance_desc": "Không"
+    ,
+        "phone": "0362.240.392"
     },
 ]
 
@@ -1049,6 +1061,7 @@ else:
                         st.image(ktv["avatar"], use_container_width=True)
                     st.markdown(f"#### {ktv['name']}</h4>", unsafe_allow_html=True)
                     st.markdown(f"<span class='role-title'>{ktv['title']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='margin:5px 0; font-size:0.95rem; font-weight:bold; color:#10B981;'>📞 {ktv.get('phone', '')}</p>", unsafe_allow_html=True)
                     st.markdown(f"<p>Lương cứng: <b>7.000.000 đ</b></p>", unsafe_allow_html=True)
                     st.markdown(f"<p style='color:#FF7A00;'>Thưởng KPI làm thực tế: <b>+{fmt_vnd(ktv['kpi_bonus'])} đ</b></p>", unsafe_allow_html=True)
                     if ktv["allowance"] > 0:
@@ -1219,6 +1232,7 @@ else:
                         st.image(ktv["avatar"], use_container_width=True)
                     st.markdown(f"#### {ktv['name']}</h4>", unsafe_allow_html=True)
                     st.markdown(f"<span class='role-title'>{ktv['title']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='margin:5px 0; font-size:0.95rem; font-weight:bold; color:#10B981;'>📞 {ktv.get('phone', '')}</p>", unsafe_allow_html=True)
                     st.markdown(f"<p>Lương cứng: <b>7.000.000 đ</b></p>", unsafe_allow_html=True)
                     st.markdown(f"<p style='color:#FF7A00;'>Thưởng KPI thi công: <b>+{fmt_vnd(ktv['kpi_bonus'])} đ</b></p>", unsafe_allow_html=True)
                     if ktv["allowance"] > 0:
@@ -1404,6 +1418,7 @@ else:
                         st.image(ktv["avatar"], use_container_width=True)
                     st.markdown(f"#### {ktv['name']}</h4>", unsafe_allow_html=True)
                     st.markdown(f"<span class='role-title'>{ktv['title']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='margin:5px 0; font-size:0.95rem; font-weight:bold; color:#10B981;'>📞 {ktv.get('phone', '')}</p>", unsafe_allow_html=True)
                     st.markdown(f"<p>Tài khoản: <code style='color:#FF7A00; font-size:0.95rem; font-weight:bold;'>{ktv['username']}</code></p>", unsafe_allow_html=True)
                     st.markdown(f"<p style='margin-top:5px; font-size:0.8rem; color:#94A3B8;'>{ktv['note']}</p>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
