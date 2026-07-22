@@ -192,7 +192,7 @@ def approve_proposal(proposal_type: str = "", proposal_id: int = None, approver_
     except Exception as e:
         return f"Lỗi khi thực hiện phê duyệt: {str(e)}"
     finally:
-
+        pass
 def reject_proposal(proposal_type: str = "", proposal_id: int = None, approver_fullname: str = ""):
     """
     Bác bỏ một đề xuất công trình hoặc ca bảo trì bằng ID.
@@ -234,7 +234,7 @@ def reject_proposal(proposal_type: str = "", proposal_id: int = None, approver_f
     except Exception as e:
         return f"Lỗi khi thực hiện bác bỏ: {str(e)}"
     finally:
-
+        pass
 # --- 2. NHÓM BÁO CÁO / CHẤM CÔNG ---
 
 def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / Trạm sạc)", ktv_names: list = None, note: str = "", reporter_username: str = "", reporter_fullname: str = ""):
@@ -269,7 +269,7 @@ def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / 
     except Exception as e:
         return f"Lỗi khi lưu chấm công: {str(e)}"
     finally:
-
+        pass
 def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm (P)", reason: str = "", logged_by_fullname: str = ""):
     """
     Đăng ký báo nghỉ phép cho một Kỹ thuật viên (KTV).
@@ -322,7 +322,7 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
     except Exception as e:
         return f"Lỗi khi lưu nghỉ phép: {str(e)}"
     finally:
-
+        pass
 # --- 3. NHÓM ĐĂNG KÝ SẢN LƯỢNG ---
 
 
@@ -363,7 +363,7 @@ def delete_attendance(ktv_fullname: str, date_str: str = ""):
     except Exception as e:
         return f"Lỗi xóa chấm công: {str(e)}"
     finally:
-
+        pass
 def delete_leave(ktv_fullname: str, date_str: str = ""):
     """
     Xóa báo cáo nghỉ phép (hủy đơn xin nghỉ) của một Kỹ thuật viên trong một ngày cụ thể.
@@ -388,7 +388,7 @@ def delete_leave(ktv_fullname: str, date_str: str = ""):
     except Exception as e:
         return f"Lỗi xóa nghỉ phép: {str(e)}"
     finally:
-
+        pass
 def register_project(project_name: str = "", contract_value: float = 0.0, ktv_names: list = None, registered_by_fullname: str = ""):
     """
     Đăng ký nghiệm thu công trình mới đã đóng điện để chờ duyệt thưởng 0.5%.
@@ -436,7 +436,7 @@ def register_project(project_name: str = "", contract_value: float = 0.0, ktv_na
     except Exception as e:
         return f"Lỗi khi đăng ký dự án: {str(e)}"
     finally:
-
+        pass
 def register_maintenance(client_name: str = "", location: str = "", ktv_names: list = None, registered_by_fullname: str = ""):
     """
     Đăng ký nghiệm thu ca bảo trì khân cấp hoàn thành để chờ duyệt thưởng 100k.
@@ -480,7 +480,7 @@ def register_maintenance(client_name: str = "", location: str = "", ktv_names: l
     except Exception as e:
         return f"Lỗi khi đăng ký ca bảo trì: {str(e)}"
     finally:
-
+        pass
 # --- 4. NHÓM CHẾ TÀI PHẠT ---
 
 def log_fine(fine_type: str = "", reason: str = "", logged_by_fullname: str = ""):
@@ -510,7 +510,7 @@ def log_fine(fine_type: str = "", reason: str = "", logged_by_fullname: str = ""
     except Exception as e:
         return f"Lỗi khi lưu hình phạt: {str(e)}"
     finally:
-
+        pass
 # --- 5. NHÓM TRA CỨU TỔNG QUAN ---
 
 def query_salaries(month_filter: str = "Tất cả các tháng tích lũy"):
