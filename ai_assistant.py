@@ -16,7 +16,7 @@ class SupabaseConnectionWrapper:
     def commit(self):
         self.conn.commit()
     def close(self):
-        self.conn.close()
+        pass # Disabled for caching
     def rollback(self):
         self.conn.rollback()
 
@@ -44,6 +44,7 @@ class SupabaseCursorWrapper:
     def close(self):
         self.cursor.close()
 
+@st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
     try:
         import streamlit as st
@@ -72,6 +73,7 @@ def get_vn_now():
 def get_vn_date_str():
     return get_vn_now().strftime("%Y-%m-%d")
 
+@st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
     return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 

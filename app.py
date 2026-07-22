@@ -19,7 +19,7 @@ class SupabaseConnectionWrapper:
     def commit(self):
         self.conn.commit()
     def close(self):
-        self.conn.close()
+        pass # Disabled for caching
     def rollback(self):
         self.conn.rollback()
 
@@ -47,6 +47,7 @@ class SupabaseCursorWrapper:
     def close(self):
         self.cursor.close()
 
+@st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
     try:
         import streamlit as st
@@ -447,6 +448,7 @@ init_db()
 # ==========================================
 # 3. CÁC HÀM TIỆN ÍCH (HELPER FUNCTIONS)
 # ==========================================
+@st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
     return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 
