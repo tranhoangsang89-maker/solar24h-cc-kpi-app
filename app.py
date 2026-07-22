@@ -49,21 +49,23 @@ class SupabaseCursorWrapper:
 
 @st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
+    import streamlit as st
+    import psycopg2
+    
+    supabase_url = None
+    if "SUPABASE_DB_URL" in st.secrets:
+        supabase_url = st.secrets["SUPABASE_DB_URL"]
+        
+    if not supabase_url:
+        st.error("LỖI: Chưa cấu hình SUPABASE_DB_URL trong Secrets! Vui lòng kiểm tra lại cấu hình trên Streamlit Cloud.")
+        st.stop()
+        
     try:
-        import streamlit as st
-        supabase_url = st.secrets.get('SUPABASE_DB_URL')
-    except:
-        try:
-            secrets = toml.load(r'd:\IDE CC KPI Solar 24h\.streamlit\secrets.toml')
-            supabase_url = secrets.get('SUPABASE_DB_URL')
-        except:
-            supabase_url = None
-            
-    if supabase_url:
-        return SupabaseConnectionWrapper(psycopg2.connect(supabase_url))
-    else:
-        import sqlite3
-        return sqlite3.connect('solar24h_local.db', check_same_thread=False)
+        raw_conn = psycopg2.connect(supabase_url)
+        return SupabaseConnectionWrapper(raw_conn)
+    except Exception as e:
+        st.error(f"LỖI KẾT NỐI SUPABASE: {e}")
+        st.stop()
 
 
 
@@ -449,7 +451,23 @@ init_db()
 # ==========================================
 @st.cache_resource(ttl=600, show_spinner=False)
 def get_connection():
-    return sqlite3.connect('solar24h_local.db', check_same_thread=False)
+    import streamlit as st
+    import psycopg2
+    
+    supabase_url = None
+    if "SUPABASE_DB_URL" in st.secrets:
+        supabase_url = st.secrets["SUPABASE_DB_URL"]
+        
+    if not supabase_url:
+        st.error("LỖI: Chưa cấu hình SUPABASE_DB_URL trong Secrets! Vui lòng kiểm tra lại cấu hình trên Streamlit Cloud.")
+        st.stop()
+        
+    try:
+        raw_conn = psycopg2.connect(supabase_url)
+        return SupabaseConnectionWrapper(raw_conn)
+    except Exception as e:
+        st.error(f"LỖI KẾT NỐI SUPABASE: {e}")
+        st.stop()
 
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
