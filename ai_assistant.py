@@ -59,7 +59,7 @@ def get_connection():
         return SupabaseConnectionWrapper(psycopg2.connect(supabase_url))
     else:
         import sqlite3
-        return get_connection()
+        return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 
 
 
@@ -73,7 +73,7 @@ def get_vn_date_str():
     return get_vn_now().strftime("%Y-%m-%d")
 
 def get_connection():
-    return get_connection()
+    return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 
 # --- 1. NHÓM ĐỀ XUẤT / DUYỆT THƯỞNG ---
 

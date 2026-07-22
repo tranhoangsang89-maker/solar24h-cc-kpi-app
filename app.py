@@ -62,7 +62,7 @@ def get_connection():
         return SupabaseConnectionWrapper(psycopg2.connect(supabase_url))
     else:
         import sqlite3
-        return get_connection()
+        return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 
 
 
@@ -448,7 +448,7 @@ init_db()
 # 3. CÁC HÀM TIỆN ÍCH (HELPER FUNCTIONS)
 # ==========================================
 def get_connection():
-    return get_connection()
+    return sqlite3.connect('solar24h_local.db', check_same_thread=False)
 
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
