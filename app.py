@@ -62,6 +62,14 @@ def get_connection():
         
     try:
         raw_conn = psycopg2.connect(supabase_url)
+        raw_conn.autocommit = True # Fix InFailedSqlTransaction
+        return SupabaseConnectionWrapper(raw_conn)
+    except Exception as e:
+        st.error(f"LỖI KẾT NỐI SUPABASE: {e}")
+        st.stop()
+        
+    try:
+        raw_conn = psycopg2.connect(supabase_url)
         return SupabaseConnectionWrapper(raw_conn)
     except Exception as e:
         st.error(f"LỖI KẾT NỐI SUPABASE: {e}")
@@ -460,6 +468,14 @@ def get_connection():
         
     if not supabase_url:
         st.error("LỖI: Chưa cấu hình SUPABASE_DB_URL trong Secrets! Vui lòng kiểm tra lại cấu hình trên Streamlit Cloud.")
+        st.stop()
+        
+    try:
+        raw_conn = psycopg2.connect(supabase_url)
+        raw_conn.autocommit = True # Fix InFailedSqlTransaction
+        return SupabaseConnectionWrapper(raw_conn)
+    except Exception as e:
+        st.error(f"LỖI KẾT NỐI SUPABASE: {e}")
         st.stop()
         
     try:
