@@ -565,6 +565,139 @@ def send_zalo_webhook(message):
         except Exception:
             pass
 
+def render_ai_assistant_page():
+    st.markdown("### 🤖 Trợ Lý AI Trưởng Nhóm & Admin")
+    st.info("💡 Bạn có thể nhập yêu cầu hoặc nhấn nút **Bấm để Nói** để ra lệnh cho trợ lý AI thực hiện các tác vụ tự động (chấm công, báo nghỉ phép, đăng ký công trình/bảo trì, duyệt đề xuất, báo cáo bảng lương...).")
+    
+    # 1. Cấu hình API Key
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        try:
+            if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+                api_key = st.secrets["GEMINI_API_KEY"]
+        except Exception:
+            pass
+            
+    # Hộp chứa Key tạm thời trong session
+    if "temp_gemini_api_key" not in st.session_state:
+        st.session_state.temp_gemini_api_key = ""
+        
+    if not api_key and not st.session_state.temp_gemini_api_key:
+        with st.expander("🔑 Cấu hình API Key Gemini (Bắt buộc để chạy AI)", expanded=True):
+            st.warning("⚠️ Không tìm thấy biến môi trường GEMINI_API_KEY hoặc Streamlit Secrets.")
+            temp_key = st.text_input("Nhập khóa Gemini API Key của bạn (lấy tại Google AI Studio):", type="password")
+            if st.button("Lưu tạm thời cho phiên làm việc này 💾"):
+                if temp_key.strip():
+                    st.session_state.temp_gemini_api_key = temp_key.strip()
+                    st.success("Đã lưu API Key tạm thời!")
+                    st.rerun()
+                else:
+                    st.error("Khóa API không được bỏ trống!")
+            st.markdown("""
+            *Để cấu hình vĩnh viễn:* Hãy tạo file `.streamlit/secrets.toml` trong thư mục dự án và thêm dòng sau:
+            ```toml
+            GEMINI_API_KEY = "Khóa_API_của_bạn"
+            ```
+            """)
+            return
+            
+    active_api_key = api_key if api_key else st.session_state.temp_gemini_api_key
+    
+    # 2. Khởi tạo lịch sử chat trong session state
+    if "ai_messages" not in st.session_state:
+        st.session_state.ai_messages = [
+            {"role": "assistant", "content": f"Xin chào **{st.session_state.fullname}**! Tôi là Trợ lý AI Solar 24H. Tôi có thể giúp gì cho bạn hôm nay?"}
+        ]
+        
+    # Hiển thị các tin nhắn cũ
+    for msg in st.session_state.ai_messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            
+    st.markdown("---")
+    
+    # 3. Ghi âm bằng st.audio_input (Native Streamlit 1.59+)
+    audio_file = st.audio_input("Nhấn biểu tượng micro bên dưới để ghi âm và ra lệnh bằng giọng nói 🎤:")
+    if audio_file:
+        audio_bytes = audio_file.read()
+        audio_id = hashlib.md5(audio_bytes).hexdigest()
+        
+        if "processed_audio_ids" not in st.session_state:
+            st.session_state.processed_audio_ids = set()
+            
+        if audio_id not in st.session_state.processed_audio_ids:
+            st.session_state.processed_audio_ids.add(audio_id)
+            
+            audio_data = {
+                "mime_type": audio_file.type,
+                "data": audio_bytes
+            }
+            
+            # Hiển thị tin nhắn tạm thời của user
+            with st.chat_message("user"):
+                st.markdown("🎤 *[Đang gửi tin nhắn thoại...]*")
+                
+            with st.chat_message("assistant"):
+                with st.spinner("Đang dịch thoại và thực thi tác vụ..."):
+                    import importlib
+                    import ai_assistant
+                    importlib.reload(ai_assistant)
+                    from ai_assistant import ask_gemini_assistant
+                    response = ask_gemini_assistant(
+                        user_prompt="Hãy dịch và thực hiện yêu cầu trong file âm thanh này.",
+                        user_role=st.session_state.role,
+                        user_fullname=st.session_state.fullname,
+                        user_username=st.session_state.user,
+                        api_key=active_api_key,
+                        audio_data=audio_data
+                    )
+                    
+                    # Phân tách bản dịch lời thoại từ response
+                    user_text = "🎤 *[Tin nhắn thoại]*"
+                    if response.startswith("[Bản dịch thoại:"):
+                        try:
+                            parts = response.split("]", 1)
+                            trans_part = parts[0]
+                            response = parts[1].strip()
+                            
+                            text_start = trans_part.find('"')
+                            text_end = trans_part.rfind('"')
+                            if text_start != -1 and text_end != -1:
+                                user_text = f"🎤 *[Giọng nói: \"{trans_part[text_start+1:text_end]}\"]*"
+                            else:
+                                user_text = f"🎤 *[Giọng nói: {trans_part.replace('[Bản dịch thoại:', '').strip(' \'\"][]')}]*"
+                        except Exception:
+                            pass
+                    
+                    # Cập nhật lịch sử chat
+                    st.session_state.ai_messages.append({"role": "user", "content": user_text})
+                    st.session_state.ai_messages.append({"role": "assistant", "content": response})
+                    st.rerun()
+
+    # 4. Ô nhập tin nhắn văn bản thông thường
+    user_input = st.chat_input("Nhập câu lệnh hoặc câu hỏi của bạn tại đây...")
+    if user_input:
+        st.session_state.ai_messages.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+            
+        with st.chat_message("assistant"):
+            with st.spinner("Đang xử lý yêu cầu..."):
+                import importlib
+                import ai_assistant
+                importlib.reload(ai_assistant)
+                from ai_assistant import ask_gemini_assistant
+                response = ask_gemini_assistant(
+                    user_prompt=user_input,
+                    user_role=st.session_state.role,
+                    user_fullname=st.session_state.fullname,
+                    user_username=st.session_state.user,
+                    api_key=active_api_key
+                )
+                st.markdown(response)
+                st.session_state.ai_messages.append({"role": "assistant", "content": response})
+                st.rerun()
+
 # ==========================================
 # 4. HỆ THỐNG XÁC THỰC TÀI KHOẢN (AUTH)
 # ==========================================
@@ -658,13 +791,19 @@ else:
     if st.session_state.role == "KTV":
         menu = st.sidebar.radio(
             "CHỌN CHỨC NĂNG SỬ DỤNG:",
-            ["🕒 Chấm Công Thực Địa", "🏗️ Đăng Ký Dự Án & Ca Sửa Chữa", "📊 Báo Cáo Quỹ Lương Chung"]
+            ["🤖 Trợ Lý AI Trưởng Nhóm", "🕒 Chấm Công Thực Địa", "🏗️ Đăng Ký Dự Án & Ca Sửa Chữa", "📊 Báo Cáo Quỹ Lương Chung"]
         )
         
         # ------------------------------------------
+        # KTV - CHỨC NĂNG 0: TRỢ LÝ AI TRƯỞNG NHÓM
+        # ------------------------------------------
+        if menu == "🤖 Trợ Lý AI Trưởng Nhóm":
+            render_ai_assistant_page()
+            
+        # ------------------------------------------
         # KTV - CHỨC NĂNG 1: CHẤM CÔNG THỰC ĐỊA
         # ------------------------------------------
-        if menu == "🕒 Chấm Công Thực Địa":
+        elif menu == "🕒 Chấm Công Thực Địa":
             st.markdown("### 🕒 Chấm Công Định Vị & Đính Kèm Ảnh Timemark")
             
             # Hiển thị thẻ thông tin cá nhân KTV
@@ -922,13 +1061,19 @@ else:
     elif st.session_state.role == "Admin":
         menu = st.sidebar.radio(
             "CHỌN CHỨC NĂNG QUẢN LÝ:",
-            ["📝 Duyệt KPI Kỹ Thuật", "📊 Tính Toán Toàn Cảnh Bảng Lương", "🕒 Nhật Ký Chấm Công KTV", "⚠️ Ghi Nhận Lỗi Phạt", "👥 Danh Sách KTV & Ảnh Hồ Sơ"]
+            ["🤖 Trợ Lý AI Trưởng Nhóm", "📝 Duyệt KPI Kỹ Thuật", "📊 Tính Toán Toàn Cảnh Bảng Lương", "🕒 Nhật Ký Chấm Công KTV", "⚠️ Ghi Nhận Lỗi Phạt", "👥 Danh Sách KTV & Ảnh Hồ Sơ"]
         )
         
         # ------------------------------------------
+        # ADMIN - CHỨC NĂNG 0: TRỢ LÝ AI TRƯỞNG NHÓM
+        # ------------------------------------------
+        if menu == "🤖 Trợ Lý AI Trưởng Nhóm":
+            render_ai_assistant_page()
+            
+        # ------------------------------------------
         # ADMIN - CHỨC NĂNG 1: DUYỆT CÔNG TRÌNH / BẢO TRÌ
         # ------------------------------------------
-        if menu == "📝 Duyệt KPI Kỹ Thuật":
+        elif menu == "📝 Duyệt KPI Kỹ Thuật":
             st.markdown("### 📝 Phê Duyệt Ca Bảo Trì & Thưởng Công Trình Mới")
             st.info("💡 Bất kỳ khoản thưởng nào do Trưởng nhóm đề xuất đều phải được Admin (Anh Sang / Sếp Việt) bấm **Duyệt Thưởng ✅** thì mới được cộng vào Quỹ Lương Chung.")
             
