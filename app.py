@@ -232,6 +232,8 @@ DB_FILE = "solar24h_local.db"
 
 def init_db():
     conn = get_connection()
+    if type(conn).__name__ == 'SupabaseConnectionWrapper':
+        return
     c = conn.cursor()
     
     # Bảng người dùng tài khoản
