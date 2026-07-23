@@ -1418,7 +1418,9 @@ else:
                     row_data["Số ngày nghỉ phép (P)"] = f"{total_leave_days} ngày"
                     matrix_rows.append(row_data)
                 
-                st.dataframe(pd.DataFrame(matrix_rows), use_container_width=True)
+                df_matrix = pd.DataFrame(matrix_rows)
+                df_matrix.index = df_matrix.index + 1
+                st.dataframe(df_matrix, use_container_width=True)
 
             with tab_detail:
                 att_df = pd.read_sql_query('SELECT id, date as "Ngày", time as "Giờ", username as "Tài Khoản Báo Cáo", fullname as "Trưởng Nhóm Báo Cáo", participating_ktvs as "KTV Tham Gia", work_type as "Loại Công Việc", note as "Ghi Chú", photo_name as "Ảnh Đính Kèm" FROM attendance ORDER BY id DESC', conn)
