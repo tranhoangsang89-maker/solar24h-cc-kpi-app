@@ -238,9 +238,9 @@ def reject_proposal(proposal_type: str = "", proposal_id: int = None, approver_f
         pass
 # --- 2. NHÓM BÁO CÁO / CHẤM CÔNG ---
 
-def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / Trạm sạc)", ktv_names: list = None, note: str = "", reporter_username: str = "", reporter_fullname: str = ""):
+def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / Trạm sạc)", ktv_names: list = None, note: str = "", reporter_username: str = "", reporter_fullname: str = "", date_str: str = ""):
     """
-    Báo cáo chấm công ca làm việc tại hiện trường cho một hoặc nhiều Kỹ thuật viên (KTV).
+    Báo cáo chấm công ca làm việc tại hiện trường cho một hoặc nhiều Kỹ thuật viên (KTV). Có thể chỉ định ngày chấm công.
     
     Parameters:
         work_type: Loại công việc ('Thi công lắp đặt mới (Hệ Solar / Trạm sạc)', 'Bảo trì định kỳ / Khắc phục sự cố tủ điện, inverter', 'Hỗ trợ công việc lao động phổ thông, dọn dẹp kho').
@@ -248,6 +248,7 @@ def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / 
         note: Ghi chú chi tiết công việc hoặc tiến độ công trường.
         reporter_username: Tài khoản (username) của trưởng nhóm gửi báo cáo (ví dụ: 'thanhnc', 'namnh').
         reporter_fullname: Tên đầy đủ của trưởng nhóm gửi báo cáo.
+        date_str: Ngày chấm công (định dạng YYYY-MM-DD, mặc định là ngày hôm nay nếu để trống).
     """
     if not ktv_names:
         return "Lỗi: Danh sách KTV tham gia (ktv_names) không được để trống."
@@ -255,7 +256,8 @@ def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / 
     conn = get_connection()
     c = conn.cursor()
     now_vn = get_vn_now()
-    date_str = now_vn.strftime("%Y-%m-%d")
+    if not date_str:
+        date_str = now_vn.strftime("%Y-%m-%d")
     time_str = now_vn.strftime("%H:%M:%S")
     participating_str = ", ".join(ktv_names)
     photo_name = "ai_verified.png" # Đánh dấu ca chấm công tạo tự động bởi AI
@@ -271,7 +273,7 @@ def add_attendance(work_type: str = "Thi công lắp đặt mới (Hệ Solar / 
         return f"Lỗi khi lưu chấm công: {str(e)}"
     finally:
         pass
-def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm (P)", reason: str = "", logged_by_fullname: str = ""):
+def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm (P)", reason: str = "", logged_by_fullname: str = "", date_str: str = ""):
     """
     Đăng ký báo nghỉ phép cho một Kỹ thuật viên (KTV).
     
@@ -280,6 +282,7 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
         leave_type: Loại nghỉ phép ('Nghỉ phép năm (P)', 'Nghỉ việc riêng có phép (P)', 'Nghỉ bệnh / Khác (P)', 'Nghỉ không phép (KP)').
         reason: Lý do xin nghỉ phép chi tiết.
         logged_by_fullname: Tên đầy đủ của người đăng ký nghỉ phép (thường là Trưởng nhóm hoặc Admin).
+        date_str: Ngày nghỉ phép (định dạng YYYY-MM-DD, mặc định là ngày hôm nay nếu để trống).
     """
     if not ktv_fullname:
         return "Lỗi: Tên KTV xin nghỉ (ktv_fullname) không được để trống."
@@ -298,13 +301,14 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
             
     conn = get_connection()
     c = conn.cursor()
-    today_str = get_vn_date_str()
+    if not date_str:
+        date_str = get_vn_date_str()
     
     try:
         c.execute("""
             INSERT INTO leave_logs (date, username, fullname, leave_type, reason, logged_by)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (today_str, target_uname, ktv_fullname, leave_type, reason, logged_by_fullname))
+        """, (date_str, target_uname, ktv_fullname, leave_type, reason, logged_by_fullname))
         conn.commit()
         
         # Gửi thông báo Zalo webhook
@@ -315,11 +319,11 @@ def register_leave(ktv_fullname: str = "", leave_type: str = "Nghỉ phép năm 
                 send_zalo_webhook = getattr(_main, "send_zalo_webhook")
             else:
                 send_zalo_webhook = __import__("app").send_zalo_webhook
-            send_zalo_webhook(f"[Solar 24h AI Assistant] Đã ghi nhận lịch nghỉ phép cho KTV {ktv_fullname} ngày {today_str} ({leave_type}). Lý do: {reason}. Người thực hiện: {logged_by_fullname}.")
+            send_zalo_webhook(f"[Solar 24h AI Assistant] Đã ghi nhận lịch nghỉ phép cho KTV {ktv_fullname} ngày {date_str} ({leave_type}). Lý do: {reason}. Người thực hiện: {logged_by_fullname}.")
         except Exception:
             pass
             
-        return f"Đã ghi nhận nghỉ phép thành công cho KTV {ktv_fullname} vào ngày {today_str} (Loại: {leave_type})."
+        return f"Đã ghi nhận nghỉ phép thành công cho KTV {ktv_fullname} vào ngày {date_str} (Loại: {leave_type})."
     except Exception as e:
         return f"Lỗi khi lưu nghỉ phép: {str(e)}"
     finally:

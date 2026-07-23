@@ -1451,7 +1451,7 @@ else:
 
             with tab_leave_list:
                 st.markdown("#### 🏖️ Danh Sách Lịch Sử Đăng Ký Nghỉ Phép KTV:")
-                l_logs_df = pd.read_sql_query("SELECT id, date as 'Ngày Nghỉ', fullname as 'KTV Nghỉ Phép', leave_type as 'Loại Nghỉ Phép', reason as 'Lý Do Chi Tiết', logged_by as 'Người Đăng Ký' FROM leave_logs ORDER BY id DESC", conn)
+                l_logs_df = pd.read_sql_query('SELECT id, date as "Ngày Nghỉ", fullname as "KTV Nghỉ Phép", leave_type as "Loại Nghỉ Phép", reason as "Lý Do Chi Tiết", logged_by as "Người Đăng Ký" FROM leave_logs ORDER BY id DESC', conn)
                 if l_logs_df.empty:
                     st.info("Chưa có lịch đăng ký nghỉ phép nào.")
                 else:
